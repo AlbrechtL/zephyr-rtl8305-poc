@@ -1,0 +1,5 @@
+# Copyright (c) 2026 Albrecht Lohofener
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_RTL8305_STM32G030
+	select SOC_STM32G030XX

@@ -1,0 +1,6 @@
+board:
+  name: rtl8305_stm32g030
+  full_name: Realtek RTL8305 Ethernet switch with STM32G030
+  vendor: eth_switches
+  socs:
+    - name: stm32g030xx

@@ -1,0 +1,14 @@
+identifier: rtl8305_stm32g030
+name: Realtek RTL8305 Ethernet switch with STM32G030
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+supported:
+  - gpio
+  - i2c
+  - spi
+ram: 8
+flash: 32
+vendor: eth_switches
