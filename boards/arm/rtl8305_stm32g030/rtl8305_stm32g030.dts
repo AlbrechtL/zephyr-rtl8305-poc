@@ -40,20 +40,8 @@
 		status = "okay";
 		#address-cells = <1>;
 		#size-cells = <0>;
-
-
-		// phy: phy@0 {
-		// 	compatible = "ethernet-phy-fixed-link";
-		// 	reg = <0>;
-		// 	status = "okay";
-		// 	default-speeds = "100BASE Full-Duplex";
-		// };
 	};
 };
-
-// &mac {
-// 	phy-handle = <&eth_phy>;
-// };
 
 &clk_hsi {
 	status = "okay";
