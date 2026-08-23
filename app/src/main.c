@@ -60,6 +60,7 @@ void poll_thread(void)
 int main(void)
 {
 	printf("Hello %s\n", CONFIG_BOARD_TARGET);
+	printf("Build date and time: %s %s\n", __DATE__, __TIME__);
 
 	return 0;
 }
