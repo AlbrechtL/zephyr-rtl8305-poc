@@ -3,7 +3,7 @@
 Firmware (STM32 + Zephyr) proof-of-concept to configure the Realtek RTL8305 Ethernet switch chip.
 
 **Setup and build**
-1. Create and activate a Python virtual environment:
+1. Create a new folder and activate a Python virtual environment:
 ```
 python3 -m venv .venv
 source .venv/bin/activate
@@ -25,10 +25,28 @@ west update
 ```
 west packages pip --install
 ```
-6. Build the application:
+6. Export a Zephyr CMake package:
+```
+west zephyr-export
+```
+7. Install the Zephyr SDK (necessary only once):
+```
+west sdk install
+```
+8. Build the application:
 ```
 west build app
 ```
+9. Flash the application:
+```
+west flash
+```
+or
+```
+west flash --runner openocd
+```
+
+More information can be found at https://docs.zephyrproject.org/latest/develop/getting_started/index.html.
 
 **Notes**
 - Follow Zephyr's docs for target-specific toolchain and environment setup if build fails.
