@@ -20,17 +20,34 @@
 		zephyr,flash = &flash0;
 	};
 
-	leds: leds {
-		compatible = "gpio-leds";
+	dip_switches {
+        compatible = "gpio-keys";
 
-		blue_led: blue_led {
-			gpios = <&gpioa 0 GPIO_ACTIVE_HIGH>;
-			label = "User LED";
-		};
-	};
+        dip_0: dip_0 {
+            gpios = <&gpiob 8 GPIO_ACTIVE_HIGH>;
+            label = "DIP Switch 0";
+        };
+
+        dip_1: dip_1 {
+            gpios = <&gpiob 9 GPIO_ACTIVE_HIGH>;
+            label = "DIP Switch 1";
+        };
+
+        dip_2: dip_2 {
+            gpios = <&gpioc 14 GPIO_ACTIVE_HIGH>;
+            label = "DIP Switch 2";
+        };
+
+		dip_3: dip_3 {
+            gpios = <&gpioc 15 GPIO_ACTIVE_HIGH>;
+            label = "DIP Switch 3";
+        };
+    };
 
 	aliases {
-		led0 = &blue_led;
+		dip0 = &dip_0;
+		dip1 = &dip_1;
+		dip2 = &dip_2;
 	};
 
 	mdio0: mdio {
