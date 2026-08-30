@@ -7,4 +7,4 @@ set(BOARD rtl8305_stm32g030)
 find_package(Zephyr)
 project(my_zephyr_app)
 
-target_sources(app PRIVATE src/main.c)
+target_sources(app PRIVATE src/main.c src/rtl8305.c src/shell_cmds.c)

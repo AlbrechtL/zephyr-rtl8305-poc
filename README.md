@@ -48,8 +48,33 @@ west flash --runner openocd
 
 More information can be found at https://docs.zephyrproject.org/latest/develop/getting_started/index.html.
 
+**Shell commands**
+
+The application provides an `ethsw` shell command to configure the RTL8305 switch, and a `dipsw` command to read the DIP switches:
+
+```
+dipsw
+    Print the state of all DIP switches.
+
+ethsw status link
+    Print the link state of all ports (PHY 0x0 - 0x8).
+
+ethsw status dump <phy> <start> <count>
+    Dump a range of raw RTL8305 registers via MDIO.
+    <phy>   Pseudo-PHY address (0x0 - 0x8)
+    <start> First register address
+    <count> Number of registers to dump
+
+ethsw vlan lan <port> <vid>
+    Configure a LAN VLAN on a port (minimal real config).
+    <port> Port number
+    <vid>  VLAN ID
+```
+
 **Notes**
 - Follow Zephyr's docs for target-specific toolchain and environment setup if build fails.
 - This repository contains a small sample demonstrating MDIO/GPIO and UART shell code paths used to configure the RTL8305 switch.
 
+**Disclaimer**
+- Parts of this code were created with the assistance of an AI assistant. The code should be reviewed and tested before use in production.
 
