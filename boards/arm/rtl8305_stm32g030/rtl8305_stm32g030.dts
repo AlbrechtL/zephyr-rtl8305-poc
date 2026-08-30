@@ -21,33 +21,34 @@
 	};
 
 	dip_switches {
-        compatible = "gpio-keys";
+		compatible = "gpio-keys";
 
-        dip_0: dip_0 {
-            gpios = <&gpiob 8 GPIO_ACTIVE_HIGH>;
-            label = "DIP Switch 0";
-        };
+		dip_0: dip_0 {
+			gpios = <&gpiob 8 GPIO_ACTIVE_HIGH>;
+			label = "DIP Switch 0";
+		};
 
-        dip_1: dip_1 {
-            gpios = <&gpiob 9 GPIO_ACTIVE_HIGH>;
-            label = "DIP Switch 1";
-        };
+		dip_1: dip_1 {
+			gpios = <&gpiob 9 GPIO_ACTIVE_HIGH>;
+			label = "DIP Switch 1";
+		};
 
-        dip_2: dip_2 {
-            gpios = <&gpioc 14 GPIO_ACTIVE_HIGH>;
-            label = "DIP Switch 2";
-        };
+		dip_2: dip_2 {
+			gpios = <&gpioc 14 GPIO_ACTIVE_HIGH>;
+			label = "DIP Switch 2";
+		};
 
 		dip_3: dip_3 {
-            gpios = <&gpioc 15 GPIO_ACTIVE_HIGH>;
-            label = "DIP Switch 3";
-        };
-    };
+			gpios = <&gpioc 15 GPIO_ACTIVE_HIGH>;
+			label = "DIP Switch 3";
+		};
+	};
 
 	aliases {
 		dip0 = &dip_0;
 		dip1 = &dip_1;
 		dip2 = &dip_2;
+		dip3 = &dip_3;
 	};
 
 	mdio0: mdio {
