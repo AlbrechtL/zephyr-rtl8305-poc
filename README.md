@@ -65,10 +65,28 @@ ethsw status dump <phy> <start> <count>
     <start> First register address
     <count> Number of registers to dump
 
+ethsw vlan show
+    Show the current VLAN configuration (control register, each group's
+    VID and member set, and each port's VLAN group).
+
 ethsw vlan lan <port> <vid>
-    Configure a LAN VLAN on a port (minimal real config).
-    <port> Port number
-    <vid>  VLAN ID
+    Assign a port to a LAN VLAN. Port N maps to VLAN group N (0=A, 1=B,
+    2=C, 3=D, 4=E). Sets the group VID, assigns the port to that group,
+    and recomputes the member sets so that ports sharing the same VID
+    can communicate. Ends with a soft reset.
+    <port> Port number (0 - 4)
+    <vid>  VLAN ID (0 - 0xFFF)
+
+ethsw vlan vid <group> <vid>
+    Set the 12-bit VID of a VLAN group. Ends with a soft reset.
+    <group> VLAN group (0=A, 1=B, 2=C, 3=D, 4=E)
+    <vid>   VLAN ID (0 - 0xFFF)
+
+ethsw vlan member <group> <member>
+    Set the member set of a VLAN group (bit N = port N). Ends with a
+    soft reset.
+    <group>  VLAN group (0=A, 1=B, 2=C, 3=D, 4=E)
+    <member> Member bitmask (0 - 0x1F)
 ```
 
 **Notes**

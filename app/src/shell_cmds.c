@@ -102,13 +102,219 @@ static int cmd_dipsw(const struct shell *sh, size_t argc, char **argv)
 	return 0;
 }
 
-/* vlan - VLAN configuration (not yet implemented). */
-static int cmd_vlan(const struct shell *sh, size_t argc, char **argv)
+/* vlan - VLAN configuration. */
+static const char *vlan_group_name(uint8_t group)
 {
-	shell_print(sh, "VLAN configuration not implemented");
+	static const char *const names[RTL8305_NUM_VLAN_GROUPS] = {
+		"A", "B", "C", "D", "E",
+	};
+
+	if (group >= RTL8305_NUM_VLAN_GROUPS) {
+		return "?";
+	}
+
+	return names[group];
+}
+
+/* vlan show - display the current VLAN configuration. */
+static int cmd_vlan_show(const struct shell *sh, size_t argc, char **argv)
+{
+	const struct device *dev = rtl8305_mdio_dev();
+	uint16_t vid, ctrl;
+	uint8_t member;
+	int ret;
+
+	if (!device_is_ready(dev)) {
+		shell_error(sh, "MDIO device not ready");
+		return -ENODEV;
+	}
+
+	ret = rtl8305_vlan_get_ctrl(dev, &ctrl);
+	if (ret < 0) {
+		shell_error(sh, "Failed to read VLAN control (%d)", ret);
+		return ret;
+	}
+
+	shell_print(sh, "VLAN control: 0x%04x%s", ctrl,
+		    (ctrl & RTL8305_VLAN_CTRL_DISVLAN) ? " (VLAN disabled)"
+						       : " (VLAN enabled)");
+
+	for (uint8_t g = 0; g < RTL8305_NUM_VLAN_GROUPS; g++) {
+		ret = rtl8305_vlan_get_vid(dev, g, &vid);
+		if (ret < 0) {
+			shell_error(sh, "Failed to read VID of group %s (%d)",
+				    vlan_group_name(g), ret);
+			return ret;
+		}
+
+		ret = rtl8305_vlan_get_member(dev, g, &member);
+		if (ret < 0) {
+			shell_error(sh, "Failed to read member of group %s (%d)",
+				    vlan_group_name(g), ret);
+			return ret;
+		}
+
+		shell_print(sh, "VLAN %s: VID 0x%03x, member 0x%02x", 
+			    vlan_group_name(g), vid, member);
+	}
+
+	for (uint8_t p = 0; p < RTL8305_NUM_PORTS; p++) {
+		uint8_t index;
+
+		ret = rtl8305_vlan_get_port_index(dev, p, &index);
+		if (ret < 0) {
+			shell_error(sh, "Failed to read port %u VLAN index (%d)",
+				    p, ret);
+			return ret;
+		}
+
+		shell_print(sh, "Port %u -> VLAN %s", p, vlan_group_name(index));
+	}
 
 	return 0;
 }
+
+/* vlan lan <port> <vid> - assign a port to a LAN VLAN. */
+static int cmd_vlan_lan(const struct shell *sh, size_t argc, char **argv)
+{
+	const struct device *dev = rtl8305_mdio_dev();
+	uint8_t port;
+	uint16_t vid;
+	int ret;
+
+	if (!device_is_ready(dev)) {
+		shell_error(sh, "MDIO device not ready");
+		return -ENODEV;
+	}
+
+	port = (uint8_t)shell_strtoul(argv[1], 0, 0);
+	vid = (uint16_t)shell_strtoul(argv[2], 0, 0);
+
+	if (port >= RTL8305_NUM_PORTS) {
+		shell_error(sh, "Invalid port %u (0-%u)", port,
+			    RTL8305_NUM_PORTS - 1);
+		return -EINVAL;
+	}
+
+	if (vid > 0xfff) {
+		shell_error(sh, "Invalid VID 0x%03x (max 0xfff)", vid);
+		return -EINVAL;
+	}
+
+	ret = rtl8305_vlan_lan(dev, port, vid);
+	if (ret < 0) {
+		shell_error(sh, "VLAN configuration failed (%d)", ret);
+		return ret;
+	}
+
+	shell_print(sh, "Port %u assigned to VLAN %s (VID 0x%03x)", port,
+		    vlan_group_name(port), vid);
+
+	return 0;
+}
+
+/* vlan vid <group> <vid> - set the VID of a VLAN group. */
+static int cmd_vlan_vid(const struct shell *sh, size_t argc, char **argv)
+{
+	const struct device *dev = rtl8305_mdio_dev();
+	uint8_t group;
+	uint16_t vid;
+	int ret;
+
+	if (!device_is_ready(dev)) {
+		shell_error(sh, "MDIO device not ready");
+		return -ENODEV;
+	}
+
+	group = (uint8_t)shell_strtoul(argv[1], 0, 0);
+	vid = (uint16_t)shell_strtoul(argv[2], 0, 0);
+
+	if (group >= RTL8305_NUM_VLAN_GROUPS) {
+		shell_error(sh, "Invalid group %u (0-%u)", group,
+			    RTL8305_NUM_VLAN_GROUPS - 1);
+		return -EINVAL;
+	}
+
+	if (vid > 0xfff) {
+		shell_error(sh, "Invalid VID 0x%03x (max 0xfff)", vid);
+		return -EINVAL;
+	}
+
+	ret = rtl8305_vlan_set_vid(dev, group, vid);
+	if (ret < 0) {
+		shell_error(sh, "Failed to set VID (%d)", ret);
+		return ret;
+	}
+
+	ret = rtl8305_soft_reset(dev);
+	if (ret < 0) {
+		shell_error(sh, "Soft reset failed (%d)", ret);
+		return ret;
+	}
+
+	shell_print(sh, "VLAN %s VID set to 0x%03x", vlan_group_name(group),
+		    vid);
+
+	return 0;
+}
+
+/* vlan member <group> <member> - set the member set of a VLAN group. */
+static int cmd_vlan_member(const struct shell *sh, size_t argc, char **argv)
+{
+	const struct device *dev = rtl8305_mdio_dev();
+	uint8_t group, member;
+	int ret;
+
+	if (!device_is_ready(dev)) {
+		shell_error(sh, "MDIO device not ready");
+		return -ENODEV;
+	}
+
+	group = (uint8_t)shell_strtoul(argv[1], 0, 0);
+	member = (uint8_t)shell_strtoul(argv[2], 0, 0);
+
+	if (group >= RTL8305_NUM_VLAN_GROUPS) {
+		shell_error(sh, "Invalid group %u (0-%u)", group,
+			    RTL8305_NUM_VLAN_GROUPS - 1);
+		return -EINVAL;
+	}
+
+	if (member > RTL8305_MEMBER_MASK) {
+		shell_error(sh, "Invalid member 0x%02x (max 0x%02x)", member,
+			    RTL8305_MEMBER_MASK);
+		return -EINVAL;
+	}
+
+	ret = rtl8305_vlan_set_member(dev, group, member);
+	if (ret < 0) {
+		shell_error(sh, "Failed to set member (%d)", ret);
+		return ret;
+	}
+
+	ret = rtl8305_soft_reset(dev);
+	if (ret < 0) {
+		shell_error(sh, "Soft reset failed (%d)", ret);
+		return ret;
+	}
+
+	shell_print(sh, "VLAN %s member set to 0x%02x", vlan_group_name(group),
+		    member);
+
+	return 0;
+}
+
+SHELL_STATIC_SUBCMD_SET_CREATE(
+	vlan_cmds,
+	SHELL_CMD(show, NULL, "Show the current VLAN configuration",
+		  cmd_vlan_show),
+	SHELL_CMD_ARG(lan, NULL, "Assign a port to a LAN VLAN: lan <port> <vid>",
+		      cmd_vlan_lan, 3, 0),
+	SHELL_CMD_ARG(vid, NULL, "Set a group VID: vid <group> <vid>",
+		      cmd_vlan_vid, 3, 0),
+	SHELL_CMD_ARG(member, NULL,
+		      "Set a group member set: member <group> <member>",
+		      cmd_vlan_member, 3, 0),
+	SHELL_SUBCMD_SET_END);
 
 SHELL_STATIC_SUBCMD_SET_CREATE(
 	status_cmds,
@@ -120,8 +326,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 SHELL_STATIC_SUBCMD_SET_CREATE(
 	ethsw_cmds,
 	SHELL_CMD(status, &status_cmds, "RTL8305 switch status", NULL),
-	SHELL_CMD(vlan, NULL, "RTL8305 VLAN configuration (not implemented)",
-		  cmd_vlan),
+	SHELL_CMD(vlan, &vlan_cmds, "RTL8305 VLAN configuration", NULL),
 	SHELL_SUBCMD_SET_END);
 
 SHELL_CMD_REGISTER(ethsw, &ethsw_cmds, "RTL8305 switch commands", NULL);
